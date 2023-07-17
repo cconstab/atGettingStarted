@@ -55,7 +55,9 @@ Future<void> main(List<String> args) async {
   Duration retryDuration = Duration(seconds: 3);
   while (!onboarded) {
     try {
-      stdout.write(chalk.brightBlue('\r\x1b[KConnecting as $fromAtsign... '));
+      stdout.write(chalk.brightBlue('\r\x1b[KConnecting as '));
+      stdout.write(chalk.brightYellow(' $fromAtsign '));
+      stdout.write(chalk.brightBlue(' : '));
       await Future.delayed(Duration(milliseconds: 1000)); // Pause just long enough for the retry to be visible
       onboarded = await onboardingService.authenticate();
     } catch (exception) {
