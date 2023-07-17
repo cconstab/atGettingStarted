@@ -7,7 +7,6 @@ import 'package:at_onboarding_cli/at_onboarding_cli.dart';
 import 'package:at_cli_commons/at_cli_commons.dart';
 import 'package:at_utils/at_logger.dart';
 
-
 // External Packages
 import 'package:version/version.dart';
 import 'package:chalkdart/chalk.dart';
@@ -20,7 +19,7 @@ Future<void> main(List<String> args) async {
   String fromAtsign = args[0];
   String toAtsign = args[1];
 
-    // Now on to the atPlatform startup
+  // Now on to the atPlatform startup
   AtSignLogger.root_level = 'SHOUT';
 
   String? homeDirectory = getHomeDirectory();
@@ -30,13 +29,12 @@ Future<void> main(List<String> args) async {
 
   //onboarding preference builder can be used to set onboardingService parameters
   AtOnboardingPreference atOnboardingConfig = AtOnboardingPreference()
-    ..hiveStoragePath = '$homeDirectory/.$nameSpace/$fromAtsign/storage'
+    ..hiveStoragePath = '$homeDirectory/.${nameSpace}get/$fromAtsign/storage'
     ..namespace = nameSpace
-    ..downloadPath = '$homeDirectory/.$nameSpace/files'
+    ..downloadPath = '$homeDirectory/.${nameSpace}get/files'
     ..isLocalStoreRequired = true
-    ..commitLogPath = '$homeDirectory/.$nameSpace/$fromAtsign/storage/commitLog'
+    ..commitLogPath = '$homeDirectory/.${nameSpace}get/$fromAtsign/storage/commitLog'
     ..fetchOfflineNotifications = true
-    ..useAtChops = true
     ..atProtocolEmitted = Version(2, 0, 0);
 
   var metaData = Metadata()
@@ -48,8 +46,8 @@ Future<void> main(List<String> args) async {
 
   var key = AtKey()
     ..key = 'message'
-    ..sharedBy = fromAtsign
-    ..sharedWith = toAtsign
+    ..sharedBy = toAtsign
+    ..sharedWith = fromAtsign
     ..namespace = nameSpace
     ..metadata = metaData;
 
@@ -58,7 +56,7 @@ Future<void> main(List<String> args) async {
   Duration retryDuration = Duration(seconds: 3);
   while (!onboarded) {
     try {
-      stdout.write(chalk.brightBlue('\r\x1b[KConnecting ... '));
+      stdout.write(chalk.brightBlue('\r\x1b[KConnecting as $fromAtsign... '));
       await Future.delayed(Duration(milliseconds: 1000)); // Pause just long enough for the retry to be visible
       onboarded = await onboardingService.authenticate();
     } catch (exception) {
@@ -71,9 +69,18 @@ Future<void> main(List<String> args) async {
   stdout.writeln(chalk.brightGreen('Connected'));
 
   AtClient atClient = AtClientManager.getInstance().atClient;
-  AtValue text = await atClient.get(key);
+  AtValue text = AtValue();
+  bool found = false;
+  try{
+   text = await atClient.get(key);
+    found = true;
+  } catch (e){
+    print(chalk.brightRed('Null'));
+  } 
+  if (found) {
   print(text.toString());
-  print(chalk.brightRed(text.value));
-  await Future.delayed(Duration(seconds: 3));
+  print(chalk.brightGreen(text.value));
+  //await Future.delayed(Duration(seconds: 3));
+  }
   exit(0);
 }

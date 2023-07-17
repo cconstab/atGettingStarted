@@ -34,7 +34,6 @@ Future<void> main(List<String> args) async {
     ..isLocalStoreRequired = true
     ..commitLogPath = '$homeDirectory/.$nameSpace/$fromAtsign/storage/commitLog'
     ..fetchOfflineNotifications = true
-    ..useAtChops = true
     ..atProtocolEmitted = Version(2, 0, 0);
 
   var metaData = Metadata()
@@ -56,7 +55,7 @@ Future<void> main(List<String> args) async {
   Duration retryDuration = Duration(seconds: 3);
   while (!onboarded) {
     try {
-      stdout.write(chalk.brightBlue('\r\x1b[KConnecting ... '));
+      stdout.write(chalk.brightBlue('\r\x1b[KConnecting as $fromAtsign... '));
       await Future.delayed(Duration(milliseconds: 1000)); // Pause just long enough for the retry to be visible
       onboarded = await onboardingService.authenticate();
     } catch (exception) {
@@ -70,6 +69,6 @@ Future<void> main(List<String> args) async {
 
   AtClient atClient = AtClientManager.getInstance().atClient;
   atClient.put(key, text);
-  await Future.delayed(Duration(seconds: 3));
+  await Future.delayed(Duration(seconds: 10));
   exit(0);
 }
