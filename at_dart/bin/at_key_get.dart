@@ -20,7 +20,7 @@ Future<void> main(List<String> args) async {
   String toAtsign = args[1];
 
   // Now on to the atPlatform startup
-  AtSignLogger.root_level = 'SHOUT';
+  AtSignLogger.root_level = 'INFO';
 
   String? homeDirectory = getHomeDirectory();
   // Namespace by convention is an atSign you own
@@ -29,11 +29,10 @@ Future<void> main(List<String> args) async {
 
   //onboarding preference builder can be used to set onboardingService parameters
   AtOnboardingPreference atOnboardingConfig = AtOnboardingPreference()
-    ..hiveStoragePath = '$homeDirectory/.${nameSpace}get/$fromAtsign/storage'
+    ..hiveStoragePath = '$homeDirectory/.$nameSpace/$fromAtsign/storage'
     ..namespace = nameSpace
-    ..downloadPath = '$homeDirectory/.${nameSpace}get/files'
     ..isLocalStoreRequired = true
-    ..commitLogPath = '$homeDirectory/.${nameSpace}get/$fromAtsign/storage/commitLog'
+    ..commitLogPath = '$homeDirectory/.$nameSpace/$fromAtsign/storage/commitLog'
     ..fetchOfflineNotifications = true
     ..atProtocolEmitted = Version(2, 0, 0);
 
@@ -56,9 +55,8 @@ Future<void> main(List<String> args) async {
   Duration retryDuration = Duration(seconds: 3);
   while (!onboarded) {
     try {
-      stdout.write(chalk.brightBlue('\r\x1b[KConnecting as '));
-      stdout.write(chalk.brightYellow(' $fromAtsign '));
-      stdout.write(chalk.brightBlue(' : '));
+      stdout.write(
+          chalk.brightBlue('\r\x1b[KConnecting as${chalk.brightYellow(' $fromAtsign ')}${chalk.brightBlue(' : ')}'));
       await Future.delayed(Duration(milliseconds: 1000)); // Pause just long enough for the retry to be visible
       onboarded = await onboardingService.authenticate();
     } catch (exception) {
@@ -73,16 +71,16 @@ Future<void> main(List<String> args) async {
   AtClient atClient = AtClientManager.getInstance().atClient;
   AtValue text = AtValue();
   bool found = false;
-  try{
-   text = await atClient.get(key);
+  try {
+    text = await atClient.get(key);
     found = true;
-  } catch (e){
+  } catch (e) {
+    print(e.toString());
     print(chalk.brightRed('Null'));
-  } 
+  }
   if (found) {
-  print(text.toString());
-  print(chalk.brightGreen(text.value));
-  //await Future.delayed(Duration(seconds: 3));
+    stdout.writeln(text.toString());
+    stdout.writeln(chalk.brightGreen(text.value));
   }
   exit(0);
 }

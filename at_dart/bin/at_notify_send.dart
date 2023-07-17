@@ -21,7 +21,7 @@ Future<void> main(List<String> args) async {
   String text = args[2];
 
   // Now on to the atPlatform startup
-  AtSignLogger.root_level = 'INFO';
+  AtSignLogger.root_level = 'SHOUT';
 
   String? homeDirectory = getHomeDirectory();
   String nameSpace = 'colin';
@@ -30,6 +30,7 @@ Future<void> main(List<String> args) async {
   AtOnboardingPreference atOnboardingConfig = AtOnboardingPreference()
     ..hiveStoragePath = '$homeDirectory/.$nameSpace/$fromAtsign/storage'
     ..namespace = nameSpace
+    ..downloadPath = '$homeDirectory/.$nameSpace/files'
     ..isLocalStoreRequired = true
     ..commitLogPath = '$homeDirectory/.$nameSpace/$fromAtsign/storage/commitLog'
     ..fetchOfflineNotifications = true
@@ -54,8 +55,7 @@ Future<void> main(List<String> args) async {
   Duration retryDuration = Duration(seconds: 3);
   while (!onboarded) {
     try {
-      stdout.write(
-          chalk.brightBlue('\r\x1b[KConnecting as${chalk.brightYellow(' $fromAtsign ')}${chalk.brightBlue(' : ')}'));
+      stdout.write(chalk.brightBlue('\r\x1b[KConnecting as${chalk.brightYellow(' $fromAtsign ')}${chalk.brightBlue(' : ')}'));
       await Future.delayed(Duration(milliseconds: 1000)); // Pause just long enough for the retry to be visible
       onboarded = await onboardingService.authenticate();
     } catch (exception) {
@@ -68,9 +68,7 @@ Future<void> main(List<String> args) async {
   stdout.writeln(chalk.brightGreen('Connected'));
 
   AtClient atClient = AtClientManager.getInstance().atClient;
-  print(key.toString());
-  //atClient.delete(key);
   atClient.put(key, text);
-  await Future.delayed(Duration(seconds: 60));
+  await Future.delayed(Duration(seconds: 10));
   exit(0);
 }
