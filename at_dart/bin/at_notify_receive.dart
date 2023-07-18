@@ -58,14 +58,14 @@ Future<void> main(List<String> args) async {
     }
   }
   stdout.writeln(chalk.brightGreen('Connected'));
-  pipePrint('$fromAtsign: ');
+  stdout.write(chalk.brightYellow('$fromAtsign: '));
 
   AtClient atClient = AtClientManager.getInstance().atClient;
   
   atClient.notificationService.subscribe(regex: 'message.$nameSpace@', shouldDecrypt: true).listen(
       ((notification) async {
     String keyAtsign = notification.key;
-    print(notification.key);
+    stdout.writeln(chalk.blue(notification.key));
     keyAtsign = keyAtsign.replaceAll('${notification.to}:', '');
     keyAtsign = keyAtsign.replaceAll('.$nameSpace${notification.from}', '');
     if (keyAtsign == 'message') {
@@ -76,7 +76,7 @@ Future<void> main(List<String> args) async {
       //
       print(chalk.brightGreen.bold('\r\x1b[K${notification.from}: ') + chalk.brightGreen(talk));
 
-      pipePrint('$fromAtsign: ');
+      stdout.write(chalk.brightYellow('$fromAtsign: '));
     }
   }),
       onError: (e) => logger.severe('Notification Failed:$e'),

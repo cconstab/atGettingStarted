@@ -69,6 +69,16 @@ Future<void> main(List<String> args) async {
   stdout.writeln(chalk.brightGreen('Connected'));
 
   AtClient atClient = AtClientManager.getInstance().atClient;
+
+  // Wait for initial sync to complete
+  stdout.write(chalk.brightBlue("Synching your data."));
+  var mySynclistener = MySyncProgressListener();
+  atClient.syncService.addProgressListener(mySynclistener);
+  while (!mySynclistener.syncComplete) {
+    await Future.delayed(Duration(milliseconds: 250));
+    stdout.write(chalk.brightBlue('.'));
+  }
+
   AtValue text = AtValue();
   bool found = false;
   try {

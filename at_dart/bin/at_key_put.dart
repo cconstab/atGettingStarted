@@ -49,17 +49,21 @@ Future<void> main(List<String> args) async {
     ..namespace = nameSpace
     ..metadata = metaData;
 
-  AtOnboardingService onboardingService = AtOnboardingServiceImpl(fromAtsign, atOnboardingConfig);
+  AtOnboardingService onboardingService =
+      AtOnboardingServiceImpl(fromAtsign, atOnboardingConfig);
   bool onboarded = false;
   Duration retryDuration = Duration(seconds: 3);
   while (!onboarded) {
     try {
-      stdout.write(
-          chalk.brightBlue('\r\x1b[KConnecting as${chalk.brightYellow(' $fromAtsign ')}${chalk.brightBlue(' : ')}'));
-      await Future.delayed(Duration(milliseconds: 1000)); // Pause just long enough for the retry to be visible
+      stdout.write(chalk.brightBlue(
+          '\r\x1b[KConnecting as${chalk.brightYellow(' $fromAtsign ')}${chalk.brightBlue(' : ')}'));
+      await Future.delayed(Duration(
+          milliseconds:
+              1000)); // Pause just long enough for the retry to be visible
       onboarded = await onboardingService.authenticate();
     } catch (exception) {
-      stdout.write(chalk.brightRed('$exception. Will retry in ${retryDuration.inSeconds} seconds'));
+      stdout.write(chalk.brightRed(
+          '$exception. Will retry in ${retryDuration.inSeconds} seconds'));
     }
     if (!onboarded) {
       await Future.delayed(retryDuration);
@@ -68,9 +72,26 @@ Future<void> main(List<String> args) async {
   stdout.writeln(chalk.brightGreen('Connected'));
 
   AtClient atClient = AtClientManager.getInstance().atClient;
-  print(key.toString());
+
+  // Wait for initial sync to complete
+  stdout.write(chalk.brightBlue("Synching your data."));
+  var mySynclistener = MySyncProgressListener();
+  atClient.syncService.addProgressListener(mySynclistener);
+  while (!mySynclistener.syncComplete) {
+    await Future.delayed(Duration(milliseconds: 250));
+    stdout.write(chalk.brightBlue('.'));
+  }
+
+  print('\r\n ${key.toString()}   :  $text');
   //await atClient.delete(key);
-  await atClient.put(key, text);
-  await Future.delayed(Duration(seconds: 30));
-  exit(0);
+       await atClient.put(key, text);
+
+   //Using atkeys we get the latest value
+  // int a = 1;
+  // while (a < 20) {
+  //  await atClient.put(key, a.toString());
+  //   a++;
+  // }  
+  //   await Future.delayed(Duration(seconds: 10));
+  //  exit(0);
 }

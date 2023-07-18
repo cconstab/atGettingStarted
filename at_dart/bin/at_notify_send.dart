@@ -70,26 +70,19 @@ Future<void> main(List<String> args) async {
 
   AtClient atClient = AtClientManager.getInstance().atClient;
 
-  int a = 1;
-  //Sending the same key results in the latest key being looked up
-  
-  // await atClient.put(key, text);
-  // while (a < 4) {
-  //   await atClient.put(key, a.toString());
-  //   a++;
-  // }
- 
-  // Using notifications we get all the updates
+   
 
   await atClient.notificationService.notify(NotificationParams.forUpdate(key, value:text),
         waitForFinalDeliveryStatus: false, checkForFinalDeliveryStatus: false);
   
-  while (a < 4) {
-    await atClient.notificationService.notify(NotificationParams.forUpdate(key, value: a.toString()),
-        waitForFinalDeliveryStatus: false, checkForFinalDeliveryStatus: false);
-    a++;
-  }
+  // Using notifications we get all the updates
+  // int a = 1;
+  // while (a < 101) {
+  //   await atClient.notificationService.notify(NotificationParams.forUpdate(key, value: a.toString()),
+  //       waitForFinalDeliveryStatus: false, checkForFinalDeliveryStatus: false);
+  //   a++;
+  // }
 
-  await Future.delayed(Duration(seconds: 20));
+  await Future.delayed(Duration(seconds: 1));
   exit(0);
 }
