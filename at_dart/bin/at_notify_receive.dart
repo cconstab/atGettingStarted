@@ -14,11 +14,10 @@ import 'package:logging/src/level.dart';
 
 Future<void> main(List<String> args) async {
   if (args.length < 2 || args.length > 2) {
-    print('at_key <from atSign> <to atSign>');
+    print('at_notify_receive <atSign>');
     exit(-1);
   }
   String fromAtsign = args[0];
-  String toAtsign = args[1];
 
   // Now on to the atPlatform startup
   AtSignLogger.root_level = 'SHOUT';
@@ -35,10 +34,11 @@ Future<void> main(List<String> args) async {
   AtOnboardingPreference atOnboardingConfig = AtOnboardingPreference()
     ..hiveStoragePath = '$homeDirectory/.${nameSpace}get/$fromAtsign/storage'
     ..namespace = nameSpace
+    ..fetchOfflineNotifications = false
     ..downloadPath = '$homeDirectory/.${nameSpace}get/files'
     ..isLocalStoreRequired = true
     ..commitLogPath = '$homeDirectory/.${nameSpace}get/$fromAtsign/storage/commitLog'
-    ..fetchOfflineNotifications = true
+    ..fetchOfflineNotifications = false
     ..atProtocolEmitted = Version(2, 0, 0);
 
   AtOnboardingService onboardingService = AtOnboardingServiceImpl(fromAtsign, atOnboardingConfig);
