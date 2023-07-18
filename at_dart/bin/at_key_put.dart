@@ -21,7 +21,7 @@ Future<void> main(List<String> args) async {
   String text = args[2];
 
   // Now on to the atPlatform startup
-  AtSignLogger.root_level = 'INFO';
+  AtSignLogger.root_level = 'SHOUT';
 
   String? homeDirectory = getHomeDirectory();
   String nameSpace = 'colin';
@@ -40,7 +40,7 @@ Future<void> main(List<String> args) async {
     ..isEncrypted = true
     ..namespaceAware = true
     ..ttr = -1
-    ..ttl = 30000;
+    ..ttl = 60000;
 
   var key = AtKey()
     ..key = 'message'
@@ -69,8 +69,8 @@ Future<void> main(List<String> args) async {
 
   AtClient atClient = AtClientManager.getInstance().atClient;
   print(key.toString());
-  //atClient.delete(key);
-  atClient.put(key, text);
-  await Future.delayed(Duration(seconds: 60));
+  //await atClient.delete(key);
+  await atClient.put(key, text);
+  await Future.delayed(Duration(seconds: 30));
   exit(0);
 }

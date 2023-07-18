@@ -55,7 +55,8 @@ Future<void> main(List<String> args) async {
   Duration retryDuration = Duration(seconds: 3);
   while (!onboarded) {
     try {
-      stdout.write(chalk.brightBlue('\r\x1b[KConnecting as${chalk.brightYellow(' $fromAtsign ')}${chalk.brightBlue(' : ')}'));
+      stdout.write(
+          chalk.brightBlue('\r\x1b[KConnecting as${chalk.brightYellow(' $fromAtsign ')}${chalk.brightBlue(' : ')}'));
       await Future.delayed(Duration(milliseconds: 1000)); // Pause just long enough for the retry to be visible
       onboarded = await onboardingService.authenticate();
     } catch (exception) {
@@ -68,7 +69,25 @@ Future<void> main(List<String> args) async {
   stdout.writeln(chalk.brightGreen('Connected'));
 
   AtClient atClient = AtClientManager.getInstance().atClient;
-  atClient.put(key, text);
-  await Future.delayed(Duration(seconds: 10));
+  //atClient.put(key, text);
+  //Sending the same key results in the latest key being sent
+  // int a = 0;
+  // while (a < 4) {
+  //   await atClient.put(key, a.toString());
+  //   sleep(Duration(seconds: 1));
+  //   a++;
+  // }
+  //bool success = false;
+ 
+    await atClient.notificationService.notify(NotificationParams.forUpdate(key, value:text),
+        waitForFinalDeliveryStatus: false, checkForFinalDeliveryStatus: false);
+  int a = 0;
+  while (a < 4) {
+    await atClient.notificationService.notify(NotificationParams.forUpdate(key, value: a.toString()),
+        waitForFinalDeliveryStatus: false, checkForFinalDeliveryStatus: false);
+    a++;
+  }
+
+  //await Future.delayed(Duration(seconds: 10));
   exit(0);
 }

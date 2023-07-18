@@ -20,7 +20,7 @@ Future<void> main(List<String> args) async {
   String toAtsign = args[1];
 
   // Now on to the atPlatform startup
-  AtSignLogger.root_level = 'INFO';
+  AtSignLogger.root_level = 'SHOUT';
 
   String? homeDirectory = getHomeDirectory();
   // Namespace by convention is an atSign you own

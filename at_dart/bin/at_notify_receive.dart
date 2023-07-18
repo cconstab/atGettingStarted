@@ -10,6 +10,7 @@ import 'package:at_utils/at_logger.dart';
 // External Packages
 import 'package:version/version.dart';
 import 'package:chalkdart/chalk.dart';
+import 'package:logging/src/level.dart';
 
 Future<void> main(List<String> args) async {
   if (args.length < 2 || args.length > 2) {
@@ -21,6 +22,9 @@ Future<void> main(List<String> args) async {
 
   // Now on to the atPlatform startup
   AtSignLogger.root_level = 'SHOUT';
+  final AtSignLogger logger = AtSignLogger(' at_notify ');
+  logger.hierarchicalLoggingEnabled = true;
+  logger.logger.level = Level.SHOUT;
 
   String? homeDirectory = getHomeDirectory();
   // Namespace by convention is an atSign you own
@@ -37,26 +41,13 @@ Future<void> main(List<String> args) async {
     ..fetchOfflineNotifications = true
     ..atProtocolEmitted = Version(2, 0, 0);
 
-  var metaData = Metadata()
-    ..isPublic = false
-    ..isEncrypted = true
-    ..namespaceAware = true
-    ..ttr = -1
-    ..ttl = 30000;
-
-  var key = AtKey()
-    ..key = 'message'
-    ..sharedBy = toAtsign
-    ..sharedWith = fromAtsign
-    ..namespace = nameSpace
-    ..metadata = metaData;
-
   AtOnboardingService onboardingService = AtOnboardingServiceImpl(fromAtsign, atOnboardingConfig);
   bool onboarded = false;
   Duration retryDuration = Duration(seconds: 3);
   while (!onboarded) {
     try {
-      stdout.write(chalk.brightBlue('\r\x1b[KConnecting as${chalk.brightYellow(' $fromAtsign ')}${chalk.brightBlue(' : ')}'));
+      stdout.write(
+          chalk.brightBlue('\r\x1b[KConnecting as${chalk.brightYellow(' $fromAtsign ')}${chalk.brightBlue(' : ')}'));
       await Future.delayed(Duration(milliseconds: 1000)); // Pause just long enough for the retry to be visible
       onboarded = await onboardingService.authenticate();
     } catch (exception) {
@@ -67,19 +58,27 @@ Future<void> main(List<String> args) async {
     }
   }
   stdout.writeln(chalk.brightGreen('Connected'));
+  pipePrint('$fromAtsign: ');
 
   AtClient atClient = AtClientManager.getInstance().atClient;
-  AtValue text = AtValue();
-  bool found = false;
-  try{
-   text = await atClient.get(key);
-    found = true;
-  } catch (e){
-    print(chalk.brightRed('Null'));
-  } 
-  if (found) {
-  stdout.writeln(text.toString());
-  stdout.writeln(chalk.brightGreen(text.value));
-  }
-  exit(0);
+  
+  atClient.notificationService.subscribe(regex: 'message.$nameSpace@', shouldDecrypt: true).listen(
+      ((notification) async {
+    String keyAtsign = notification.key;
+    print(notification.key);
+    keyAtsign = keyAtsign.replaceAll('${notification.to}:', '');
+    keyAtsign = keyAtsign.replaceAll('.$nameSpace${notification.from}', '');
+    if (keyAtsign == 'message') {
+      logger.info('message received from ${notification.from} notification id : ${notification.id}');
+      var talk = notification.value;
+      // Terminal Control
+      // '\r\x1b[K' is used to set the cursor back to the beginning of the line then deletes to the end of line
+      //
+      print(chalk.brightGreen.bold('\r\x1b[K${notification.from}: ') + chalk.brightGreen(talk));
+
+      pipePrint('$fromAtsign: ');
+    }
+  }),
+      onError: (e) => logger.severe('Notification Failed:$e'),
+      onDone: () => logger.info('Notification listener stopped'));
 }
