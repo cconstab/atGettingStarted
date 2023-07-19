@@ -30,8 +30,6 @@ Future<void> main(List<String> args) async {
 
     nameSpace = atClient.getPreferences()!.namespace!;
     myAtsign = atClient.getCurrentAtSign()!;
-
-    // await waitForInitialSync(atClient);
   } catch (e) {
     print(argsParser.usage);
     print(e);
