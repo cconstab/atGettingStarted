@@ -9,7 +9,7 @@ environment:
 # Add regular dependencies here.
 dependencies:
   args: ^2.4.2
-  at_client: ^3.0.62
+  at_client: ^3.0.63
   at_utils: ^3.0.15
   at_onboarding_cli: ^1.3.0
   chalkdart: ^2.0.9
