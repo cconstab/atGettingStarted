@@ -92,6 +92,6 @@ Future<void> main(List<String> args) async {
   //  await atClient.put(key, a.toString());
   //   a++;
   // }  
-  //   await Future.delayed(Duration(seconds: 10));
-  //  exit(0);
+    await Future.delayed(Duration(seconds: 10));
+   exit(0);
 }
