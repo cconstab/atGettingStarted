@@ -3,85 +3,64 @@ import 'dart:io';
 
 // atPlatform packages
 import 'package:at_client/at_client.dart';
-import 'package:at_onboarding_cli/at_onboarding_cli.dart';
 import 'package:at_cli_commons/at_cli_commons.dart';
-import 'package:at_utils/at_logger.dart';
 
 // External Packages
-import 'package:version/version.dart';
-import 'package:chalkdart/chalk.dart';
+import 'package:args/args.dart';
 
 Future<void> main(List<String> args) async {
-  if (args.length < 3 || args.length > 3) {
-    print('at_notify_send <from atSign> <to atSign> <txt>');
-    exit(-1);
+  ArgParser argsParser = CLIBase.argsParser
+    ..addOption('other-atsign',
+        abbr: 'o',
+        mandatory: true,
+        help: 'The atSign we want to communicate with')
+    ..addOption('message',
+        abbr: 'm', mandatory: true, help: 'The message we want to send');
+
+  late final AtClient atClient;
+  late final String nameSpace, myAtsign, otherAtsign, message;
+  try {
+    var parsed = argsParser.parse(args);
+    otherAtsign = parsed['other-atsign'];
+    message = parsed['message'];
+
+    CLIBase cliBase =
+        await CLIBase.fromCommandLineArgs(args, parser: argsParser);
+    atClient = cliBase.atClient;
+
+    nameSpace = atClient.getPreferences()!.namespace!;
+    myAtsign = atClient.getCurrentAtSign()!;
+
+    // await waitForInitialSync(atClient);
+  } catch (e) {
+    print(argsParser.usage);
+    print(e);
+    exit(1);
   }
-  String fromAtsign = args[0];
-  String toAtsign = args[1];
-  String text = args[2];
 
-  // Now on to the atPlatform startup
-  AtSignLogger.root_level = 'SHOUT';
+  String keyName = 'message';
 
-  String? homeDirectory = getHomeDirectory();
-  String nameSpace = 'colin';
-
-  //onboarding preference builder can be used to set onboardingService parameters
-  AtOnboardingPreference atOnboardingConfig = AtOnboardingPreference()
-    ..hiveStoragePath = '$homeDirectory/.$nameSpace/$fromAtsign/storage'
+  AtKey sharedRecordID = AtKey()
+    ..key = keyName
+    ..sharedBy = myAtsign
+    ..sharedWith = otherAtsign
     ..namespace = nameSpace
-    ..downloadPath = '$homeDirectory/.$nameSpace/files'
-    ..isLocalStoreRequired = true
-    ..commitLogPath = '$homeDirectory/.$nameSpace/$fromAtsign/storage/commitLog'
-    ..fetchOfflineNotifications = true
-    ..atProtocolEmitted = Version(2, 0, 0);
+    ..metadata = (Metadata()
+      ..ttl = 60000 // expire after 60 seconds
+      ..ttr = -1); // allow recipient to keep a cached copy
 
-  var metaData = Metadata()
-    ..isPublic = false
-    ..isEncrypted = true
-    ..namespaceAware = true
-    ..ttr = -1
-    ..ttl = 30000;
+  await atClient.notificationService.notify(
+      NotificationParams.forUpdate(sharedRecordID, value: message),
+      waitForFinalDeliveryStatus: false,
+      checkForFinalDeliveryStatus: false);
 
-  var key = AtKey()
-    ..key = 'message'
-    ..sharedBy = fromAtsign
-    ..sharedWith = toAtsign
-    ..namespace = nameSpace
-    ..metadata = metaData;
-
-  AtOnboardingService onboardingService = AtOnboardingServiceImpl(fromAtsign, atOnboardingConfig);
-  bool onboarded = false;
-  Duration retryDuration = Duration(seconds: 3);
-  while (!onboarded) {
-    try {
-      stdout.write(
-          chalk.brightBlue('\r\x1b[KConnecting as${chalk.brightYellow(' $fromAtsign ')}${chalk.brightBlue(' : ')}'));
-      await Future.delayed(Duration(milliseconds: 1000)); // Pause just long enough for the retry to be visible
-      onboarded = await onboardingService.authenticate();
-    } catch (exception) {
-      stdout.write(chalk.brightRed('$exception. Will retry in ${retryDuration.inSeconds} seconds'));
-    }
-    if (!onboarded) {
-      await Future.delayed(retryDuration);
-    }
-  }
-  stdout.writeln(chalk.brightGreen('Connected'));
-
-  AtClient atClient = AtClientManager.getInstance().atClient;
-
-   
-
-  await atClient.notificationService.notify(NotificationParams.forUpdate(key, value:text),
-        waitForFinalDeliveryStatus: false, checkForFinalDeliveryStatus: false);
-  
   // Using notifications we get all the updates
-  // int a = 1;
-  // while (a < 101) {
-  //   await atClient.notificationService.notify(NotificationParams.forUpdate(key, value: a.toString()),
-  //       waitForFinalDeliveryStatus: false, checkForFinalDeliveryStatus: false);
-  //   a++;
-  // }
+  for (int a = 1; a < 101; a++) {
+    await atClient.notificationService.notify(
+        NotificationParams.forUpdate(sharedRecordID, value: a.toString()),
+        waitForFinalDeliveryStatus: false,
+        checkForFinalDeliveryStatus: false);
+  }
 
   await Future.delayed(Duration(seconds: 1));
   exit(0);

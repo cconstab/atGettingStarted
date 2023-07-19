@@ -3,95 +3,68 @@ import 'dart:io';
 
 // atPlatform packages
 import 'package:at_client/at_client.dart';
-import 'package:at_onboarding_cli/at_onboarding_cli.dart';
 import 'package:at_cli_commons/at_cli_commons.dart';
-import 'package:at_utils/at_logger.dart';
 
 // External Packages
-import 'package:version/version.dart';
-import 'package:chalkdart/chalk.dart';
+import 'package:args/args.dart';
 
 Future<void> main(List<String> args) async {
-  if (args.length < 3 || args.length > 3) {
-    print('at_key <from atSign> <to atSign> <txt>');
-    exit(-1);
+  ArgParser argsParser = CLIBase.argsParser
+    ..addOption('other-atsign',
+        abbr: 'o',
+        mandatory: true,
+        help: 'The atSign we want to communicate with')
+    ..addOption('message',
+        abbr: 'm', mandatory: true, help: 'The message we want to send');
+
+  late final AtClient atClient;
+  late final String nameSpace, myAtsign, otherAtsign, message;
+  try {
+    var parsed = argsParser.parse(args);
+    otherAtsign = parsed['other-atsign'];
+    message = parsed['message'];
+
+    CLIBase cliBase =
+        await CLIBase.fromCommandLineArgs(args, parser: argsParser);
+    atClient = cliBase.atClient;
+
+    nameSpace = atClient.getPreferences()!.namespace!;
+    myAtsign = atClient.getCurrentAtSign()!;
+
+    // await waitForInitialSync(atClient);
+  } catch (e) {
+    print(argsParser.usage);
+    print(e);
+    exit(1);
   }
-  String fromAtsign = args[0];
-  String toAtsign = args[1];
-  String text = args[2];
 
-  // Now on to the atPlatform startup
-  AtSignLogger.root_level = 'SHOUT';
+  String keyName = 'message';
 
-  String? homeDirectory = getHomeDirectory();
-  String nameSpace = 'colin';
+  // For demo purposes, we will talk direct to the remote atServer rather than
+  // use the local datastore, so we don't have to wait for a local-to-atServer
+  // sync to complete.
+  PutRequestOptions pro = PutRequestOptions()..useRemoteAtServer = true;
 
-  //onboarding preference builder can be used to set onboardingService parameters
-  AtOnboardingPreference atOnboardingConfig = AtOnboardingPreference()
-    ..hiveStoragePath = '$homeDirectory/.$nameSpace/$fromAtsign/storage'
+  AtKey sharedRecordID = AtKey()
+    ..key = keyName
+    ..sharedBy = myAtsign
+    ..sharedWith = otherAtsign
     ..namespace = nameSpace
-    ..isLocalStoreRequired = true
-    ..commitLogPath = '$homeDirectory/.$nameSpace/$fromAtsign/storage/commitLog'
-    ..fetchOfflineNotifications = true
-    ..atProtocolEmitted = Version(2, 0, 0);
+    ..metadata = (Metadata()
+      ..ttl = 60000 // expire after 60 seconds
+      ..ttr = -1); // allow recipient to keep a cached copy
 
-  var metaData = Metadata()
-    ..isPublic = false
-    ..isEncrypted = true
-    ..namespaceAware = true
-    ..ttr = -1
-    ..ttl = 60000;
+  print('\r\n ${sharedRecordID.toString()}   :  $message');
 
-  var key = AtKey()
-    ..key = 'message'
-    ..sharedBy = fromAtsign
-    ..sharedWith = toAtsign
-    ..namespace = nameSpace
-    ..metadata = metaData;
+  //await atClient.delete(sharedRecordID);
+  await atClient.put(sharedRecordID, message, putRequestOptions: pro);
 
-  AtOnboardingService onboardingService =
-      AtOnboardingServiceImpl(fromAtsign, atOnboardingConfig);
-  bool onboarded = false;
-  Duration retryDuration = Duration(seconds: 3);
-  while (!onboarded) {
-    try {
-      stdout.write(chalk.brightBlue(
-          '\r\x1b[KConnecting as${chalk.brightYellow(' $fromAtsign ')}${chalk.brightBlue(' : ')}'));
-      await Future.delayed(Duration(
-          milliseconds:
-              1000)); // Pause just long enough for the retry to be visible
-      onboarded = await onboardingService.authenticate();
-    } catch (exception) {
-      stdout.write(chalk.brightRed(
-          '$exception. Will retry in ${retryDuration.inSeconds} seconds'));
-    }
-    if (!onboarded) {
-      await Future.delayed(retryDuration);
-    }
-  }
-  stdout.writeln(chalk.brightGreen('Connected'));
-
-  AtClient atClient = AtClientManager.getInstance().atClient;
-
-  // Wait for initial sync to complete
-  stdout.write(chalk.brightBlue("Synching your data."));
-  var mySynclistener = MySyncProgressListener();
-  atClient.syncService.addProgressListener(mySynclistener);
-  while (!mySynclistener.syncComplete) {
-    await Future.delayed(Duration(milliseconds: 250));
-    stdout.write(chalk.brightBlue('.'));
-  }
-
-  print('\r\n ${key.toString()}   :  $text');
-  //await atClient.delete(key);
-       await atClient.put(key, text);
-
-   //Using atkeys we get the latest value
+  // Using atkeys we get the latest value
   // int a = 1;
   // while (a < 20) {
-  //  await atClient.put(key, a.toString());
+  //   await atClient.put(sharedRecordID, a.toString(), putRequestOptions: pro);
   //   a++;
-  // }  
-    await Future.delayed(Duration(seconds: 10));
-   exit(0);
+  // }
+
+  exit(0);
 }
