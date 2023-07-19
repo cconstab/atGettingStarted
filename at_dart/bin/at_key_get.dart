@@ -39,7 +39,7 @@ Future<void> main(List<String> args) async {
   // Construct the ID object we will use to do the fetch
   // In this case, if we are @alice, the other atSign is @bob, and the
   // nameSpace is 'demo', then the ID for the message which bob has shared with
-  // us would be @alice:message.$nameSpace@bob
+  // us would be @alice:message.demo@bob
   AtKey sharedRecordID = AtKey()
     ..key = keyName
     ..sharedBy = otherAtsign
