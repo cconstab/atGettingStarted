@@ -53,12 +53,12 @@ Future<void> main(List<String> args) async {
       checkForFinalDeliveryStatus: false);
 
   // Using notifications we get all the updates
-  for (int a = 1; a < 101; a++) {
-    await atClient.notificationService.notify(
-        NotificationParams.forUpdate(sharedRecordID, value: a.toString()),
-        waitForFinalDeliveryStatus: false,
-        checkForFinalDeliveryStatus: false);
-  }
+  // for (int a = 1; a < 101; a++) {
+  //   await atClient.notificationService.notify(
+  //       NotificationParams.forUpdate(sharedRecordID, value: a.toString()),
+  //       waitForFinalDeliveryStatus: false,
+  //       checkForFinalDeliveryStatus: false);
+  // }
 
   await Future.delayed(Duration(seconds: 1));
   exit(0);
