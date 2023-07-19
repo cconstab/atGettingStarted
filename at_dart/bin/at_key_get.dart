@@ -52,7 +52,7 @@ Future<void> main(List<String> args) async {
   sharedRecordID =
       AtKey.fromString('$myAtsign:$keyName.$nameSpace$otherAtsign');
   print(sharedRecordID);
-  // 2) Using the
+  // 2) Using AtKey.shared
   sharedRecordID =
       (AtKey.shared(keyName, namespace: nameSpace, sharedBy: otherAtsign)
             ..sharedWith(myAtsign))
