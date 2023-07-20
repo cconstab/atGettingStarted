@@ -6,10 +6,10 @@ import 'dart:io';
 // atPlatform packages
 import 'package:at_client/at_client.dart';
 import 'package:at_cli_commons/at_cli_commons.dart';
+import 'package:at_utils/at_logger.dart';
 
 // External Packages
 import 'package:args/args.dart';
-import 'package:at_utils/at_logger.dart';
 import 'package:logging/logging.dart';
 
 const JsonEncoder jsonPrettyPrinter = JsonEncoder.withIndent('    ');
