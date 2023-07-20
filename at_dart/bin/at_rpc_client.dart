@@ -64,6 +64,8 @@ class MyRpcClient implements AtRpcCallbacks {
   final Completer<AtRpcResp> completer = Completer<AtRpcResp>();
 
   Future<AtRpcResp> sendRequest() async {
+    logger.info('Sending request');
+
     AtRpcReq req = AtRpcReq.create({'message':'What time is it there??'});
     await rpc.sendRequest(toAtSign: serverAtSign, request: req);
 
@@ -72,7 +74,18 @@ class MyRpcClient implements AtRpcCallbacks {
 
   @override
   Future<void> handleResponse(AtRpcResp response) async {
-    completer.complete(response);
+    switch (response.respType) {
+      case AtRpcRespType.ack:
+        logger.info('Received ack');
+        break;
+      case AtRpcRespType.success:
+        completer.complete(response);
+        break;
+      case AtRpcRespType.error:
+      case AtRpcRespType.nack:
+        completer.completeError(response);
+        break;
+    }
   }
 
   @override
