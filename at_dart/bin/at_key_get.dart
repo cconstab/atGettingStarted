@@ -49,15 +49,15 @@ Future<void> main(List<String> args) async {
 
   // Equivalent ways of doing the above
   // 1) If you're familiar with ID structure
-  sharedRecordID =
-      AtKey.fromString('$myAtsign:$keyName.$nameSpace$otherAtsign');
-  print(sharedRecordID);
-  // 2) Using AtKey.shared
-  sharedRecordID =
-      (AtKey.shared(keyName, namespace: nameSpace, sharedBy: otherAtsign)
-            ..sharedWith(myAtsign))
-          .build();
-  print(sharedRecordID);
+  // sharedRecordID =
+  //     AtKey.fromString('$myAtsign:$keyName.$nameSpace$otherAtsign');
+  // print(sharedRecordID);
+  // // 2) Using AtKey.shared
+  // sharedRecordID =
+  //     (AtKey.shared(keyName, namespace: nameSpace, sharedBy: otherAtsign)
+  //           ..sharedWith(myAtsign))
+  //         .build();
+  // print(sharedRecordID);
 
   try {
     var val = await atClient.get(sharedRecordID);
